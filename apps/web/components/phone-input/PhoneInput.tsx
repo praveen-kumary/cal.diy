@@ -40,7 +40,7 @@ function BasePhoneInput({
 
   // This is to trigger validation on prefill value changes
   useEffect(() => {
-    if (!value) return;
+    if (!value || typeof value !== "string") return;
 
     const sanitized = value
       .trim()
@@ -64,7 +64,7 @@ function BasePhoneInput({
   return (
     <PhoneInput
       {...rest}
-      value={value ? value.trim().replace(/^\+?/, "+") : undefined}
+      value={typeof value === "string" && value ? value.trim().replace(/^\+?/, "+") : undefined}
       enableSearch
       disableSearchIcon
       country={effectiveDefaultCountry}
@@ -75,7 +75,8 @@ function BasePhoneInput({
         placeholder: rest.placeholder,
         autoComplete: "tel",
       }}
-      onChange={(val: string) => {
+      onChange={(val: unknown) => {
+        if (typeof val !== "string") return;
         onChange(val.startsWith("+") ? val : `+${val}`);
       }}
       containerClass={classNames(
@@ -116,7 +117,7 @@ function BasePhoneInputWeb({
   return (
     <PhoneInput
       {...rest}
-      value={value ? value.trim().replace(/^\+?/, "+") : undefined}
+      value={typeof value === "string" && value ? value.trim().replace(/^\+?/, "+") : undefined}
       // react-phone-input-2 treats `country` as a fallback. Keeping it stable 
       // preserves calling-code-only values like `+371` during async updates, 
       // while full international numbers still resolve their country from `value`.
@@ -130,7 +131,8 @@ function BasePhoneInputWeb({
         placeholder: rest.placeholder,
         autoComplete: "tel",
       }}
-      onChange={(val: string) => {
+      onChange={(val: unknown) => {
+        if (typeof val !== "string") return;
         onChange(val.startsWith("+") ? val : `+${val}`);
       }}
       containerClass={classNames(

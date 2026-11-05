@@ -1,5 +1,5 @@
 import { isValidPhoneNumber, parsePhoneNumberFromString } from "libphonenumber-js/max";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CUSTOM_PHONE_MASKS } from "./phone-masks";
 
 /** Count the digit placeholders (dots) in a react-phone-input-2 mask */
@@ -49,5 +49,41 @@ describe("CUSTOM_PHONE_MASKS", () => {
         );
       }
     });
+  });
+});
+
+describe("PhoneInput autofill and non-string value safety", () => {
+  const handlePhoneChange = (val: unknown, onChange: (formatted: string) => void) => {
+    if (typeof val !== "string") return;
+    onChange(val.startsWith("+") ? val : `+${val}`);
+  };
+
+  it("should safely ignore non-string inputs injected during browser autofill", () => {
+    const onChangeMock = vi.fn();
+    const nonStringValues = [
+      null,
+      undefined,
+      12345,
+      {},
+      { target: { value: "+1234567890" } },
+      [],
+      true,
+      Symbol("phone"),
+    ];
+
+    for (const val of nonStringValues) {
+      expect(() => handlePhoneChange(val, onChangeMock)).not.toThrow();
+    }
+    expect(onChangeMock).not.toHaveBeenCalled();
+  });
+
+  it("should format valid string values with leading +", () => {
+    const onChangeMock = vi.fn();
+    handlePhoneChange("15551234567", onChangeMock);
+    expect(onChangeMock).toHaveBeenCalledWith("+15551234567");
+
+    onChangeMock.mockClear();
+    handlePhoneChange("+15551234567", onChangeMock);
+    expect(onChangeMock).toHaveBeenCalledWith("+15551234567");
   });
 });
